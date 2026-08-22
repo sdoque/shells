@@ -79,3 +79,44 @@ script its status becomes the script's, so a perfectly good cloud would be
 reported as failed — and with Restart=on-failure, torn down.
 
 Verified on a real reboot: 14 systems serving 89 seconds after power-on.
+
+
+---
+
+The downloader does not carry the whitelist, and that matters
+
+downloader.sh fetches <system>/<system>_rpi64 and <system>/README.md. It never
+fetches ca/whitelist.json, and a new binary without a matching whitelist cannot
+start.
+
+The CA certifies a system only after the maitreD confirms the running
+executable's SHA-256 is on that list. Change a binary and its hash changes, so
+downloading a new system on its own leaves it refused:
+
+    certification attempt failed (the CA refused to certify (403 Forbidden):
+    Attestation failed: maitreD rejected attestation: Executable not in whitelist)
+
+The rest of the cloud carries on looking healthy, which is what makes this
+expensive: the one system you just updated is the one that will not run.
+
+So whenever a binary is published, publish ca/whitelist.json with it, and fetch
+both. After fetching and before starting, check that every binary on the host is
+covered:
+
+    cd ~/rpiExec
+    python3 - <<'PY'
+    import json, hashlib, glob, os
+    ca = set(json.load(open("ca/whitelist.json")))
+    bad = [os.path.dirname(b) for b in sorted(glob.glob("*/*_rpi64"))
+           if hashlib.sha256(open(b, "rb").read()).hexdigest() not in ca]
+    print("unauthorized:", bad or "none")
+    PY
+
+Anything listed will not obtain a certificate. A system that is present on the
+host but no longer built — an old one left behind after a rename — will show up
+here for ever and is harmless, as long as it is not in systems.txt.
+
+The maitreD caches the list it last fetched, so after the CA's whitelist changes
+there is a window of up to five minutes in which attestation is refused and the
+cloud cannot enrol. It recovers on its own. Do not go looking for a second
+problem during it.
