@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mbaigo Raspberry Pi executables</title>
+<style>
+    body { font-family: -apple-system, Helvetica, Arial, sans-serif;
+           max-width: 48rem; margin: 2rem auto; padding: 0 1rem;
+           line-height: 1.5; color: #222; }
+    h1, h2 { border-bottom: 1px solid #ddd; padding-bottom: 0.2rem; }
+    code, pre { font-family: Menlo, Consolas, monospace; }
+    pre { background: #f6f8fa; padding: 0.8rem; border-radius: 6px; overflow-x: auto; }
+    code { background: #f6f8fa; padding: 0.1rem 0.3rem; border-radius: 3px; }
+    pre code { background: none; padding: 0; }
+    .note { background: #fff7d6; border-left: 4px solid #e5c100;
+            padding: 0.6rem 0.9rem; margin: 1rem 0; border-radius: 4px; }
+    a { color: #0366d6; }
+</style>
+</head>
+<body>
+
+<h1>mbaigo Raspberry Pi executables</h1>
+
+<p>This directory hosts pre-built <code>linux/arm64</code> binaries of the
+mbaigo systems, ready to run on a Raspberry Pi 4 or 5 (64-bit OS). Each
+system lives in its own subdirectory containing the executable
+(<code>&lt;system&gt;_rpi64</code>) and a <code>README.md</code>.</p>
+
+<p>Three companion shell scripts make it easy to download, start, and stop
+a set of systems on a Pi. They all read a plain-text <code>systems.txt</code>
+that lists the system names you want to work with, one per line; blank
+lines and lines beginning with <code>#</code> are ignored.</p>
+
+<h2>About the systems</h2>
+
+<p>To learn what each system does, how it is configured, and how it fits
+into an Arrowhead local cloud, see the source repository on GitHub:</p>
+
+<p><a href="https://github.com/sdoque/systems/tree/dev">https://github.com/sdoque/systems/tree/dev</a></p>
+
+<div class="note">
+<strong>Note:</strong> the link above points to the <code>dev</code> branch,
+not to <code>main</code>. The binaries hosted here are built from
+<code>dev</code>, so that branch is the authoritative reference for the
+current behaviour of the executables.
+</div>
+
+<h2>Getting the scripts</h2>
+
+<p>From the terminal in the directory where you want to keep your systems,
+fetch the three shell scripts and a starter <code>systems.txt</code> from
+this server:</p>
+
+<pre><code>BASE=https://staff.www.ltu.se/~deventer/rpiExec
+curl -fsSL -O $BASE/downloader.sh
+curl -fsSL -O $BASE/start_systems.sh
+curl -fsSL -O $BASE/stop_systems.sh
+curl -fsSL -O $BASE/systems.txt
+chmod +x downloader.sh start_systems.sh stop_systems.sh</code></pre>
+
+<p>Edit <code>systems.txt</code> to keep only the systems you actually want
+on this Pi (one per line; blanks and lines starting with <code>#</code> are
+ignored), then proceed with the steps below.</p>
+
+<h2>1. <code>downloader.sh</code> — fetch the binaries</h2>
+
+<p>Reads <code>systems.txt</code> and, for each listed system, downloads
+<code>&lt;system&gt;/&lt;system&gt;_rpi64</code> and <code>&lt;system&gt;/README.md</code>
+from this server into the matching local subdirectory. The executable is
+marked executable after download. Download failures are logged to
+<code>download_errors.log</code>.</p>
+
+<pre><code>chmod +x downloader.sh
+./downloader.sh                 # uses ./systems.txt by default
+./downloader.sh my_systems.txt  # or specify a different list</code></pre>
+
+<p>To pull from a different host (e.g. a mirror or a local server):</p>
+
+<pre><code>REPO_BASE=https://example.org/rpiExec ./downloader.sh systems.txt</code></pre>
+
+<h2>2. <code>start_systems.sh</code> — launch everything</h2>
+
+<p>Kills any pre-existing <code>systems</code> tmux session, then starts
+each listed system in its own pane inside a new session. Panes are tiled,
+up to <code>MAX_PANES</code> per window (default 4), with additional windows
+created as needed. The script attaches your terminal to the session when
+it is done.</p>
+
+<pre><code>./start_systems.sh                   # uses ./systems.txt
+./start_systems.sh my_systems.txt    # or a custom list
+MAX_PANES=6 ./start_systems.sh       # more panes per window</code></pre>
+
+<p>Requires <code>tmux</code>.</p>
+
+<h2>3. <code>stop_systems.sh</code> — shut everything down</h2>
+
+<p>Sends Ctrl+C to every pane in the <code>systems</code> tmux session,
+waits 3 seconds for graceful shutdown, then kills the session.</p>
+
+<pre><code>./stop_systems.sh</code></pre>
+
+<h2>Typical workflow</h2>
+
+<pre><code># once
+./downloader.sh systems.txt
+
+# each working session
+./start_systems.sh systems.txt   # launch everything
+# ... work ...
+./stop_systems.sh                # clean shutdown</code></pre>
+
+</body>
+</html>

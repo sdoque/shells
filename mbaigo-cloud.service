@@ -1,0 +1,34 @@
+[Unit]
+Description=mbaigo Arrowhead local cloud
+Documentation=https://github.com/sdoque/systems
+# The cloud reaches the Netatmo API and its own systems by IP address, so it
+# wants a configured network rather than merely a running one. Docker carries
+# GraphDB and InfluxDB; neither is required to start — kgrapher and the
+# collector retry — so this orders after Docker without depending on it, and a
+# broken Docker cannot keep the heating offline.
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=jan
+Group=jan
+WorkingDirectory=/home/jan/rpiExec
+ExecStart=/home/jan/rpiExec/start_systems.sh
+ExecStop=/home/jan/rpiExec/stop_systems.sh
+RemainAfterExit=yes
+
+# The session is a tmux server that outlives the script which started it.
+# KillMode=process stops systemd from killing everything in the cgroup the
+# moment ExecStart returns, which is what the default would do and which would
+# leave the unit "active" with no cloud running at all.
+KillMode=process
+
+# A cloud that dies is a cottage with no heating, so it is worth retrying
+# rather than leaving stopped. Sixty seconds so a system crash-looping on a bad
+# configuration does not turn into a fork bomb.
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

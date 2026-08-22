@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# systems.txt is a deployment's own list of what to run, not this
+# repository's business — the cottage runs fourteen systems, a bench runs
+# three. The scripts take it as an argument and default to ./systems.txt, so
+# each site keeps its own.
+systems.txt

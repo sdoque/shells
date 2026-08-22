@@ -1,0 +1,5 @@
+# Apache directory-listing tweaks. The README lives under info.html so
+# Apache does not serve it as a DirectoryIndex fallback.
+IndexOptions FancyIndexing HTMLTable SuppressDescription
+ReadmeName info.html
+IndexIgnore .htaccess info.html

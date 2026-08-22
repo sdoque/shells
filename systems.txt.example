@@ -1,0 +1,18 @@
+# One system per line, started in this order, each in its own tmux pane.
+# Lines beginning with # are ignored, as are blank ones.
+#
+# Order matters at the start and not much after it. The CA must be able to
+# answer before anything asks it for a certificate, and the maitreD must be
+# there to attest the processes that ask — so those two come first, and the
+# authorizer next if the cloud enforces authorization. Everything below that
+# retries until what it needs appears.
+#
+# Copy this to systems.txt and edit. That file is deliberately not tracked:
+# what a site runs is the site's business, and a bench running three systems
+# should not have to argue with a cottage running fourteen.
+
+ca
+maitreD
+authorizer
+esr
+orchestrator
