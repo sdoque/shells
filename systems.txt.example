@@ -7,6 +7,15 @@
 # authorizer next if the cloud enforces authorization. Everything below that
 # retries until what it needs appears.
 #
+# A line may carry arguments after the system's name. Almost none need any —
+# a system reads systemconfig.json and runs — but envoy is one binary with two
+# shapes, a one-shot capture and a viewer for the operator, and which one it is
+# comes from the command line:
+#
+#     envoy -serve view cloudpicture
+#
+# started with no arguments, it prints its usage and exits.
+#
 # Copy this to systems.txt and edit. That file is deliberately not tracked:
 # what a site runs is the site's business, and a bench running three systems
 # should not have to argue with a cottage running fourteen.
