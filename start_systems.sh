@@ -36,10 +36,26 @@ MAX_PANES="${MAX_PANES:-4}"
 # Kill any pre-existing session with the same name.
 tmux kill-session -t "$SESSION" 2>/dev/null || true
 
+# launch builds the command for one systems.txt entry.
+#
+# An entry may carry arguments after the system's name — "envoy -serve view
+# cloudpicture". Most systems need none: they read systemconfig.json and run.
+# envoy is the exception, because it is one binary with two shapes, a one-shot
+# capture and a viewer, and which one it is comes from the command line. Without
+# this it starts, prints its usage and exits, which is what it did the first time
+# it was put in this file.
+launch() {
+    local entry="$1"
+    local name="${entry%% *}"
+    local args=""
+    [[ "$entry" == *" "* ]] && args=" ${entry#* }"
+    printf "cd '%s' && ./%s_rpi64%s" "$name" "$name" "$args"
+}
+
 # Create the session and start the first system in the initial pane.
 first="${systems[0]}"
 tmux new-session -d -s "$SESSION"
-tmux send-keys -t "$SESSION" "cd '${first}' && ./${first}_rpi64" Enter
+tmux send-keys -t "$SESSION" "$(launch "$first")" Enter
 pane_count=1
 
 for sys in "${systems[@]:1}"; do
@@ -51,7 +67,7 @@ for sys in "${systems[@]:1}"; do
     else
         tmux split-window -t "$SESSION"
     fi
-    tmux send-keys -t "$SESSION" "cd '${sys}' && ./${sys}_rpi64" Enter
+    tmux send-keys -t "$SESSION" "$(launch "$sys")" Enter
     ((pane_count++))
 done
 
@@ -61,7 +77,7 @@ tmux select-layout -t "$SESSION" tiled
 # Return focus to the first window.
 tmux select-window -t "${SESSION}:^"
 
-echo "Starting tmux session '$SESSION' with ${#systems[@]} system(s): ${systems[*]}"
+echo "Starting tmux session '$SESSION' with ${#systems[@]} system(s): ${systems[*]%% *}"
 
 # Attach only when a person is running this.
 #

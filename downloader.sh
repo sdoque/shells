@@ -38,6 +38,9 @@ echo
 while IFS= read -r system || [[ -n "$system" ]]; do
     # Trim leading/trailing whitespace
     system="$(echo "$system" | xargs)"
+    # A systems.txt entry may carry arguments for start_systems.sh; only the
+    # first token names a system, and only that can be downloaded.
+    system="${system%% *}"
 
     # Skip blanks and comments
     [[ -z "$system" ]] && continue
